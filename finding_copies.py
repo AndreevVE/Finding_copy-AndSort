@@ -28,14 +28,14 @@ def image_meta(file):
         data = "1970-01-01"
         return data
 
+
 def vid_aud_matadata(patn_f):
     try:
 #        print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
-        return (ffmpeg.probe(patn_f)["streams"])
+        return ffmpeg.probe(patn_f)["streams"]
     except ffmpeg._run.Error:
         print('[-] Неподдерживаемый формат')
         return 1
-
 
 
 def compute_checksums(file_path):
@@ -57,14 +57,16 @@ def find_copy(dictionary, key, value):
         copy = True
         return dictionary, copy
 
+
 def save_resalt(dictionary, file_save):
-    with open(file_save, "w") as file:
+    with open(file_save, "w", encoding='utf-8') as file:
         for key, value in dictionary.items():
             if "$" in value:
                 new_value = value.replace("$", "") + "\n"
                 file.write(new_value)
                 print(new_value)
                 file.write("====================================\n")
+
 
 
 if __name__ == "__main__":
@@ -85,7 +87,7 @@ if __name__ == "__main__":
                     os.remove(file_test)
         if sys.argv[1] == "-c":
             save_resalt(dictionary, file_save)
-            exit(0)
+        exit(0)
 
         for root, dirs, files in os.walk(path_check):
             for name in files:
