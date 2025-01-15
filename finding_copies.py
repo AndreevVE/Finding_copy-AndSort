@@ -58,7 +58,7 @@ def find_copy(dictionary, key, value):
         return dictionary, copy
 
 
-def save_resalt(dictionary, file_save):
+def save_result(dictionary, file_save):
     with open(file_save, "w", encoding='utf-8') as file:
         for key, value in dictionary.items():
             if "$" in value:
@@ -68,6 +68,60 @@ def save_resalt(dictionary, file_save):
                 file.write("====================================\n")
 
 
+def make_list_copy():
+    dictionary = {}
+    file_save= os.path.join(path_result, "Copies.txt")
+    for root, dirs, files in os.walk(path_check):
+        for name in files:
+            file_test = os.path.join(root, name)
+            hash_sha256 = compute_checksums(file_test)
+            dictionary, copy = find_copy(dictionary, hash_sha256, file_test)
+    save_result(dictionary, file_save)
+    exit(0)
+
+
+def sort_media():
+    list_file = {}
+    for root, _, files in os.walk(path_result):
+        for file in files:
+            file_test = os.path.join(root, file)
+            hash_file = compute_checksums(file_test)
+            if hash_file not in list_file:
+                list_file[hash_file] = file_test
+    for root, dirs, files in os.walk(path_check):
+        for name in files:
+            file_new = os.path.join(root, name)
+            basename, extension = os.path.splitext(name)
+            hash_file_new = compute_checksums(file_new)
+            if hash_file_new in list_file:
+                print(f"Файл {name} уже есть, пропускаем!")
+                continue
+            if extension == ".jpg" or extension == ".JPG" or extension == ".jpeg":
+                meta_date_jpg = image_meta(file_new).split()[0]
+                path_too = os.path.join(path_result, meta_date_jpg[0:4], meta_date_jpg[5:7])
+                os.makedirs(path_too, exist_ok=True)
+                shutil.copy2(file_new, path_too)
+#               os.remove(file_new)
+                print(f"Name: {name} - Date: {meta_date_jpg} - To_path: {path_too}")
+
+            else:
+                meta_date_mov = vid_aud_matadata(file_new)
+                if meta_date_mov != 1:
+                    try:
+                        meta_date_mov = vid_aud_matadata(file_new)[0]["tags"]['creation_time'].split("T")[0]
+                    except:
+                        print(f"Файл {file_new} - пропущен!")
+                        continue
+                    path_too_mov = os.path.join(path_result, meta_date_mov[0:4], meta_date_mov[5:7])
+                    os.makedirs(path_too_mov, exist_ok=True)
+                    shutil.copy2(file_new, path_too_mov)
+#                    os.remove(file_new)
+                    print(f"Name: {name} - Date: {meta_date_mov} - To_path: {path_too_mov}")
+                else:
+                    print(f"Файл {file_new} - пропущен!")
+                    continue
+    return 0
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -76,42 +130,9 @@ if __name__ == "__main__":
     else:
         path_check = sys.argv[2]
         path_result = sys.argv[3]
-        dictionary = {}
-        file_save= os.path.join(path_result, "Copies.txt")
-        for root, dirs, files in os.walk(path_check):
-            for name in files:
-                file_test = os.path.join(root, name)
-                hash_sha256 = compute_checksums(file_test)
-                dictionary, copy = find_copy(dictionary, hash_sha256, file_test)
-                if copy and sys.argv[1] == "-r":
-                    os.remove(file_test)
         if sys.argv[1] == "-c":
-            save_resalt(dictionary, file_save)
-        exit(0)
+            make_list_copy()
+        elif sys.argv[1] == "-s":
+            sort_media()
 
-        for root, dirs, files in os.walk(path_check):
-            for name in files:
-                file_test = os.path.join(root, name)
-                basename, extension = os.path.splitext(name)
-                if extension == ".jpg" or extension == ".JPG" or extension == ".jpeg":
-                    meta_date_jpg = image_meta(file_test).split()[0]
-                    path_too = os.path.join(path_result, meta_date_jpg[0:4], meta_date_jpg[5:7])
-                    os.makedirs(path_too, exist_ok=True)
-                    shutil.copy2(file_test, path_too)
-                    print(f"Name: {name} - Date: {meta_date_jpg} - To_path: {path_too}")
-                else:
-                    meta_date_mov = vid_aud_matadata(file_test)
-                    if meta_date_mov != 1:
-                        try:
-                            meta_date_mov = vid_aud_matadata(file_test)[0]["tags"]['creation_time'].split("T")[0]
-                        except:
-                            print(f"Файл {file_test} - пропущен!")
-                            continue
-                        path_too_mov = os.path.join(path_result, meta_date_mov[0:4], meta_date_mov[5:7])
-                        os.makedirs(path_too_mov, exist_ok=True)
-                        shutil.copy2(file_test, path_too_mov)
-                        print(f"Name: {name} - Date: {meta_date_mov} - To_path: {path_too_mov}")
-                    else:
-                        print(f"Файл {file_test} - пропущен!")
-                        continue
 
