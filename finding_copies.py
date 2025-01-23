@@ -29,7 +29,7 @@ def image_meta(file):
         return data
 
 
-def vid_aud_matadata(patn_f):
+def vid_aud_metadata(patn_f):
     try:
 #        print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
         return ffmpeg.probe(patn_f)["streams"]
@@ -62,10 +62,10 @@ def save_result(dictionary, file_save):
     with open(file_save, "w", encoding='utf-8') as file:
         for key, value in dictionary.items():
             if "$" in value:
-                new_value = value.replace("$", "") + "\n"
+                new_value = value.replace("$", "||") + "\n"
                 file.write(new_value)
                 print(new_value)
-                file.write("====================================\n")
+#                file.write("====================================\n")
 
 
 def make_list_copy():
@@ -105,10 +105,10 @@ def sort_media():
                 print(f"Name: {name} - Date: {meta_date_jpg} - To_path: {path_too}")
 
             else:
-                meta_date_mov = vid_aud_matadata(file_new)
+                meta_date_mov = vid_aud_metadata(file_new)
                 if meta_date_mov != 1:
                     try:
-                        meta_date_mov = vid_aud_matadata(file_new)[0]["tags"]['creation_time'].split("T")[0]
+                        meta_date_mov = vid_aud_metadata(file_new)[0]["tags"]['creation_time'].split("T")[0]
                     except:
                         print(f"Файл {file_new} - пропущен!")
                         continue
