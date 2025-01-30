@@ -53,7 +53,7 @@ def find_copy(dictionary, key, value):
         copy = False
         return dictionary, copy
     else:
-        dictionary[key] = dictionary.get(key, []) + " $ " + value
+        dictionary[key] = dictionary.get(key, []) + "$" + value
         copy = True
         return dictionary, copy
 
@@ -123,9 +123,37 @@ def sort_media():
     return 0
 
 
+def remove_copies():
+    file_copies = os.path.join(path_result, "Copies.txt")
+    file = open(file_copies, "r")
+    while True:
+        content = file.readline()
+        if not content:
+            break
+        file_list = content.split("||")
+        i = 0
+        for path in file_list:
+            print (i, " ", path)
+            i += 1
+        j = 0
+        num_save = input("Введите номер для сохранения: ")
+        print(f"Файл {num_save} будет сохранен")
+        for del_file in file_list:
+            if j != int(num_save):
+                del_file = del_file.strip("\n")
+                del_file.startswith('"')
+                del_file.endswith('"')
+                os.remove(del_file)
+                j += 1
+                continue
+            j += 1
+    file.close()
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print ("Введите -c для поиска копий или -r для удаления копий и сортировки")
+        print ("Введите -c для поиска копий.")
+        print ("-s для сортировки и удаления копий фото видео")
         print ("Затем путь для поиска файлов и путь для сохранения результата.")
     else:
         path_check = sys.argv[2]
@@ -134,5 +162,6 @@ if __name__ == "__main__":
             make_list_copy()
         elif sys.argv[1] == "-s":
             sort_media()
-
+        elif sys.argv[1] == "-r":
+            remove_copies()
 
