@@ -31,7 +31,7 @@ def image_meta(file):
 
 def vid_aud_metadata(patn_f):
     try:
-#        print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
+        print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
         return ffmpeg.probe(patn_f)["streams"]
     except ffmpeg._run.Error:
         print('[-] Неподдерживаемый формат')
@@ -101,7 +101,7 @@ def sort_media():
                 path_too = os.path.join(path_result, meta_date_jpg[0:4], meta_date_jpg[5:7])
                 os.makedirs(path_too, exist_ok=True)
                 shutil.copy2(file_new, path_too)
-#               os.remove(file_new)
+                os.remove(file_new)
                 print(f"Name: {name} - Date: {meta_date_jpg} - To_path: {path_too}")
 
             else:
@@ -115,7 +115,7 @@ def sort_media():
                     path_too_mov = os.path.join(path_result, meta_date_mov[0:4], meta_date_mov[5:7])
                     os.makedirs(path_too_mov, exist_ok=True)
                     shutil.copy2(file_new, path_too_mov)
-#                    os.remove(file_new)
+                    os.remove(file_new)
                     print(f"Name: {name} - Date: {meta_date_mov} - To_path: {path_too_mov}")
                 else:
                     print(f"Файл {file_new} - пропущен!")
@@ -125,7 +125,7 @@ def sort_media():
 
 def remove_copies():
     file_copies = os.path.join(path_result, "Copies.txt")
-    file = open(file_copies, "r")
+    file = open(file_copies, "r", encoding='utf-8')
     while True:
         content = file.readline()
         if not content:
@@ -153,7 +153,8 @@ def remove_copies():
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         print ("Введите -c для поиска копий.")
-        print ("-s для сортировки и удаления копий фото видео")
+        print ("-s для сортировки и удаления копий фото и видео")
+        print("-r для удаления копий по списку в файле Copies.txt")
         print ("Затем путь для поиска файлов и путь для сохранения результата.")
     else:
         path_check = sys.argv[2]
