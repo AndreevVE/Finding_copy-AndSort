@@ -124,7 +124,7 @@ def sort_media():
 
 
 def remove_copies():
-    file_copies = os.path.join(path_result, "Copies.txt")
+    file_copies = os.path.join(path_check, "Copies.txt")
     file = open(file_copies, "r", encoding='utf-8')
     while True:
         content = file.readline()
@@ -165,23 +165,43 @@ def remove_copies():
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print ("Введите -c для поиска копий.")
-        print ("-s для сортировки и удаления копий фото и видео")
+        print ("Введите \n -c для поиска копий.")
+        print ("-s для сортировки фото и видео")
         print("-r для удаления копий по списку в файле Copies.txt")
         print ("Затем путь для поиска файлов и путь для сохранения результата.")
     else:
-        path_check = sys.argv[2]
-        path_result = sys.argv[3]
+        # path_check = sys.argv[2]
+        # path_result = sys.argv[3]
         if sys.argv[1] == "-c":
-            make_list_copy()
+            path_check = sys.argv[2]
+            if os.path.isdir(path_check):
+                make_list_copy()
+            else:
+                print(f"Неверный путь {path_check}")
+                exit(1)
         elif sys.argv[1] == "-s":
-            sort_media()
+            if len(sys.argv) != 4:
+                print("Недостаточно аргументов смотри help")
+                exit(1)
+            else:
+                path_check = sys.argv[2]
+                path_result = sys.argv[3]
+            if os.path.isdir(path_check) and os.path.isdir(path_result):
+                sort_media()
+            else:
+                print(f"Неверный путь {path_check} или {path_result}")
+                exit(1)
         elif sys.argv[1] == "-r":
-            remove_copies()
+            path_check = sys.argv[2]
+            if os.path.isfile(os.path.join(path_check, "Copies.txt")):
+                remove_copies()
+            else:
+                print(f"Неверный путь {path_check} или файл Copies.txt не найден.")
+                exit(1)
         else:
             print(f"Неверный ключь {sys.argv[1]}")
-            print("Введите -c для поиска копий.")
-            print("-s для сортировки и удаления копий фото и видео")
+            print("Введите \n-c для поиска копий.")
+            print("-s для сортировки фото и видео")
             print("-r для удаления копий по списку в файле Copies.txt")
             print("Затем путь для поиска файлов и путь для сохранения результата.")
 
