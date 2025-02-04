@@ -136,8 +136,21 @@ def remove_copies():
             print (i, " ", path)
             i += 1
         j = 0
-        num_save = input("Введите номер для сохранения: ")
-        print(f"Файл {num_save} будет сохранен")
+        num_save = input("Введите номер для сохранения, n - НЕ Удалять, или r - Удалить ВСЕ: ").lower()
+        if num_save == "n":
+            print(f"Все копии файлов: \n {file_list} \n будут сохранены!")
+            continue
+        elif num_save == "r":
+            confirm = input("УДАЛЯЕМ ?").lower()
+            if confirm != "y":
+                continue
+            else:
+                num_save = 111
+        if int(num_save) != 111:
+            print(f"Файл {num_save} будет сохранен")
+        else:
+            print(f"Файл {file_list} \n УДАЛЕНЫ")
+
         for del_file in file_list:
             if j != int(num_save):
                 del_file = del_file.strip("\n")
@@ -165,4 +178,10 @@ if __name__ == "__main__":
             sort_media()
         elif sys.argv[1] == "-r":
             remove_copies()
+        else:
+            print(f"Неверный ключь {sys.argv[1]}")
+            print("Введите -c для поиска копий.")
+            print("-s для сортировки и удаления копий фото и видео")
+            print("-r для удаления копий по списку в файле Copies.txt")
+            print("Затем путь для поиска файлов и путь для сохранения результата.")
 
