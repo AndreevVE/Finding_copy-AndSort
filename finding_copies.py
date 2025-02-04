@@ -173,12 +173,18 @@ if __name__ == "__main__":
         # path_check = sys.argv[2]
         # path_result = sys.argv[3]
         if sys.argv[1] == "-c":
-            path_check = sys.argv[2]
-            if os.path.isdir(path_check):
+            if len(sys.argv) != 4:
+                print("Недостаточно аргументов смотри help")
+                exit(1)
+            else:
+                path_check = sys.argv[2]
+                path_result = sys.argv[3]
+            if os.path.isdir(path_check) and os.path.isdir(path_result):
                 make_list_copy()
             else:
-                print(f"Неверный путь {path_check}")
+                print(f"Неверный путь {path_check} или {path_result}")
                 exit(1)
+
         elif sys.argv[1] == "-s":
             if len(sys.argv) != 4:
                 print("Недостаточно аргументов смотри help")
@@ -191,6 +197,7 @@ if __name__ == "__main__":
             else:
                 print(f"Неверный путь {path_check} или {path_result}")
                 exit(1)
+
         elif sys.argv[1] == "-r":
             path_check = sys.argv[2]
             if os.path.isfile(os.path.join(path_check, "Copies.txt")):
