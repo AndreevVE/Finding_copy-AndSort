@@ -31,7 +31,7 @@ def image_meta(file):
 
 def vid_aud_metadata(patn_f):
     try:
-        print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
+ #       print(f'\n[+] Метаданные файла: {os.path.split(patn_f)[-1]}\n')
         return ffmpeg.probe(patn_f)["streams"]
     except ffmpeg._run.Error:
         print('[-] Неподдерживаемый формат')
@@ -65,7 +65,7 @@ def save_result(dictionary, file_save):
                 new_value = value.replace("$", "||") + "\n"
                 file.write(new_value)
                 print(new_value)
-#                file.write("====================================\n")
+
 
 
 def make_list_copy():
@@ -170,8 +170,6 @@ if __name__ == "__main__":
         print("-r для удаления копий по списку в файле Copies.txt")
         print ("Затем путь для поиска файлов и путь для сохранения результата.")
     else:
-        # path_check = sys.argv[2]
-        # path_result = sys.argv[3]
         if sys.argv[1] == "-c":
             if len(sys.argv) != 4:
                 print("Недостаточно аргументов смотри help")
