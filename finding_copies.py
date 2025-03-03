@@ -10,19 +10,14 @@ import shutil
 def image_meta(file):
     try:
         image = Image.open(file)
-        # извлечь данные EXIF
         exifdata = image.getexif()
-        # перебор всех полей данных EXIF
         for tag_id in exifdata:
-        # получить имя тега вместо нечитаемого идентификатора
             tag = TAGS.get(tag_id, tag_id)
             if tag == "DateTime":
                 data = exifdata.get(tag_id)
-            # декодировать байты
                 if isinstance(data, bytes):
                     data = data.decode()
-        #                print(f"{tag:25}:% {data}")
-#        print(f'\n[+] Метаданные файла: {os.path.split(file)[-1]}\n')
+#           print(f'\n[+] Метаданные файла: {os.path.split(file)[-1]}\n')
         return data
     except UnboundLocalError:
         data = "1970-01-01"
@@ -40,12 +35,13 @@ def vid_aud_metadata(patn_f):
 
 def compute_checksums(file_path):
     hash_sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_sha256.update(chunk)
-
-    return hash_sha256.hexdigest()
-
+    try:
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_sha256.update(chunk)
+        return hash_sha256.hexdigest()
+    except Exception as error:
+        print (f"File {file_path} open Error: {error} ")
 
 def find_copy(dictionary, key, value):
     if key not in dictionary:
@@ -101,7 +97,7 @@ def sort_media():
                 path_too = os.path.join(path_result, meta_date_jpg[0:4], meta_date_jpg[5:7])
                 os.makedirs(path_too, exist_ok=True)
                 shutil.copy2(file_new, path_too)
-                os.remove(file_new)
+ #               os.remove(file_new)
                 print(f"Name: {name} - Date: {meta_date_jpg} - To_path: {path_too}")
 
             else:
@@ -115,7 +111,7 @@ def sort_media():
                     path_too_mov = os.path.join(path_result, meta_date_mov[0:4], meta_date_mov[5:7])
                     os.makedirs(path_too_mov, exist_ok=True)
                     shutil.copy2(file_new, path_too_mov)
-                    os.remove(file_new)
+ #                   os.remove(file_new)
                     print(f"Name: {name} - Date: {meta_date_mov} - To_path: {path_too_mov}")
                 else:
                     print(f"Файл {file_new} - пропущен!")
