@@ -21,7 +21,7 @@ if %errorlevel% neq 0 (
         exit /b 1
     )
 
-    for %%I in ("%PYTHON_PATH%") do set PYTHON_DIR=%~dpI
+    for %%I in ("%PYTHON_PATH%") do set PYTHON_DIR=%dpI
     set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
 
     python --version >nul 2>nul
