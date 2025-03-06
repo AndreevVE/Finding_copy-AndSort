@@ -5,6 +5,51 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 import ffmpeg
 import shutil
+import tkinter as tk
+from tkinter import filedialog as fd
+
+def select_directory():
+    root = tk.Tk()  # пустое родительское окно
+    root.withdraw()  # прячем его
+    result = fd.askdirectory( master=root, mustexist=True)  # только существующие каталоги
+    root.destroy()  # уничтожаем родительское окно
+#    print(result)
+    return result
+
+
+def slect_mode():
+    root = tk.Tk()
+    root.title("Select mode")
+    root.geometry("300x200")
+    x = (root.winfo_screenwidth() - root.winfo_reqwidth()) / 2
+    y = (root.winfo_screenheight() - root.winfo_reqheight()) / 2
+    root.wm_geometry("+%d+%d" % (x, y-300))
+
+    position = {"padx": 6, "pady": 6, "anchor":"nw"}
+    languages = ["Search for copies", "Delete copies", "Sort media"]
+    selected_mode = tk.StringVar() # по умолчанию ничего не выборанно
+    selected_mode.set("Search for copies")
+    header = tk.Label(text="Select mode")
+    header.pack(**position)
+
+
+    def select():
+        header.config(text=f"Selected {selected_mode.get()}")
+
+
+
+    def select_ok():
+        root.destroy()
+
+
+    for lang in languages:
+        lang_btn = tk.Radiobutton(text=lang, value=lang, variable=selected_mode, command=select)
+        lang_btn.pack(**position)
+    ok_btn = tk.Button(root, text="Ok", command=select_ok)
+    ok_btn.pack(padx = 6, pady = 8, anchor = "center")
+    root.mainloop()
+
+    return selected_mode.get()
 
 
 def image_meta(file):
@@ -160,49 +205,32 @@ def remove_copies():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        print ("Введите \n -c для поиска копий.")
-        print ("-s для сортировки фото и видео")
-        print("-r для удаления копий по списку в файле Copies.txt")
-        print ("Затем путь для поиска файлов и путь для сохранения результата.")
-    else:
-        if sys.argv[1] == "-c":
-            if len(sys.argv) != 4:
-                print("Недостаточно аргументов смотри help")
-                exit(1)
-            else:
-                path_check = sys.argv[2]
-                path_result = sys.argv[3]
-            if os.path.isdir(path_check) and os.path.isdir(path_result):
-                make_list_copy()
-            else:
-                print(f"Неверный путь {path_check} или {path_result}")
-                exit(1)
 
-        elif sys.argv[1] == "-s":
-            if len(sys.argv) != 4:
-                print("Недостаточно аргументов смотри help")
-                exit(1)
-            else:
-                path_check = sys.argv[2]
-                path_result = sys.argv[3]
-            if os.path.isdir(path_check) and os.path.isdir(path_result):
-                sort_media()
-            else:
-                print(f"Неверный путь {path_check} или {path_result}")
-                exit(1)
-
-        elif sys.argv[1] == "-r":
-            path_check = sys.argv[2]
-            if os.path.isfile(os.path.join(path_check, "Copies.txt")):
-                remove_copies()
-            else:
-                print(f"Неверный путь {path_check} или файл Copies.txt не найден.")
-                exit(1)
+    mode = slect_mode()
+    if mode == "Search for copies":
+        path_check = select_directory()
+        path_result = select_directory()
+        if os.path.isdir(path_check) and os.path.isdir(path_result):
+            make_list_copy()
         else:
-            print(f"Неверный ключь {sys.argv[1]}")
-            print("Введите \n-c для поиска копий.")
-            print("-s для сортировки фото и видео")
-            print("-r для удаления копий по списку в файле Copies.txt")
-            print("Затем путь для поиска файлов и путь для сохранения результата.")
+            print(f"Неверный путь {path_check} или {path_result}")
+            exit(1)
+
+    elif mode == "Sort media":
+        path_check = select_directory()
+        path_result = select_directory()
+        if os.path.isdir(path_check) and os.path.isdir(path_result):
+            sort_media()
+        else:
+            print(f"Неверный путь {path_check} или {path_result}")
+            exit(1)
+
+    elif mode == "Delete copies":
+        path_check = select_directory()
+        if os.path.isfile(os.path.join(path_check, "Copies.txt")):
+             remove_copies()
+        else:
+            print(f"Неверный путь {path_check} или файл Copies.txt не найден.")
+            exit(1)
+
 
