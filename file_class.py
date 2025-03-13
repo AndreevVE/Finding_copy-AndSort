@@ -18,6 +18,9 @@ class ImageViewer:
         self.control_frame = tk.Frame(self.root)
         self.control_frame.pack()
 
+        self.prev_button = tk.Button(self.control_frame, text='<', command=self.prev_image)
+        self.prev_button.pack(side='left')
+
         self.open_button = tk.Button(self.control_frame, text='Open', command=self.open_image)
         self.open_button.pack(side='left')
 
@@ -36,6 +39,9 @@ class ImageViewer:
         self.delete_button = tk.Button(self.control_frame, text='Delete', command=self.delete)
         self.delete_button.pack(side='left')
 
+        self.next_button = tk.Button(self.control_frame, text='>', command=self.next_image)
+        self.next_button.pack(side='left')
+
         self.current_image_path = ''
         self.zoom_level = 1
 
@@ -43,6 +49,14 @@ class ImageViewer:
     def open_image(self):
         self.current_image_path = filedialog.askopenfilename(defaultextension=".jpg",
             filetypes=[("All Files", "*.*"), ("JPEG", ".jpg"), ("PNG", ".png"), ("GIF", ".gif")])
+
+        if not self.current_image_path:
+            return
+        self.directory = os.path.dirname(self.current_image_path)
+        self.all_files = sorted(os.listdir(self.directory))  # Сортируем список файлов
+        self.current_file = os.path.basename(self.current_image_path)
+        self.index = self.all_files.index(self.current_file)
+
         if self.current_image_path:
             self.load_image()
 
@@ -92,16 +106,19 @@ class ImageViewer:
     def delete(self):
         if not self.current_image_path:
             return
-        directory = os.path.dirname(self.current_image_path)
-        all_files = sorted(os.listdir(directory))  # Сортируем список файлов
+#        self.all_files = sorted(os.listdir(self.directory))  # Сортируем список файлов
         current_file = os.path.basename(self.current_image_path)
         try:
             os.remove(self.current_image_path)
-            index = all_files.index(current_file)
-            all_files.pop(index)
-            if all_files:
-                next_file = all_files[index] if index < len(all_files) else all_files[0]
-                self.current_image_path = os.path.join(directory, next_file)
+            self.all_files.remove(current_file)
+            if self.all_files:
+                index = self.all_files.index(current_file) if current_file in self.all_files else -1
+                if index + 1 < len(self.all_files):
+                    next_file = self.all_files[index + 1]
+                else:
+                    next_file = self.all_files[0]
+                self.current_image_path = os.path.join(self.directory, next_file)
+                self.current_file = os.path.basename(self.current_image_path)
                 self.load_image()
             else:
                 self.current_image_path = ''
@@ -109,6 +126,27 @@ class ImageViewer:
                 messagebox.showinfo("Удаление", "Файлы в директории закончились.")
         except ValueError:
             messagebox.showerror("Ошибка", "Файл не найден в директории.")
+
+    def next_image(self):
+#        index = self.all_files.index(self.current_file)
+        if self.all_files:
+            index = self.all_files.index(self.current_file) if self.current_file in self.all_files else -1
+            if index + 1 < len(self.all_files):
+                next_file = self.all_files[index + 1]
+            else:
+                next_file = self.all_files[0]
+            self.current_image_path = os.path.join(self.directory, next_file)
+            self.current_file = os.path.basename(self.current_image_path)
+            self.load_image()
+
+
+    def prev_image(self):
+        index = self.all_files.index(self.current_file)
+        if self.all_files:
+            next_file = self.all_files[index - 1] if index >= 0 else self.all_files[-1]
+            self.current_image_path = os.path.join(self.directory, next_file)
+            self.current_file = os.path.basename(self.current_image_path)
+            self.load_image()
 
 
 if __name__ == '__main__':
