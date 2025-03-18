@@ -2,11 +2,20 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
+from tkvideo import tkvideo
+from tkVideoPlayer import TkinterVideo
 import os
 
 
 class ImageViewer:
     def __init__(self, root):
+        self.stop_video_flag = None
+        self.original_image = None
+        self.my_label = None
+        self.all_files = None
+        self.index = None
+        self.directory = None
+        self.current_file = None
         self.root = root
         self.root.title('Image Viewer')
         self.root.geometry('2400x1200')
@@ -48,56 +57,58 @@ class ImageViewer:
 
     def open_image(self):
         self.current_image_path = filedialog.askopenfilename(defaultextension=".jpg",
-            filetypes=[("All Files", "*.*"), ("JPEG", ".jpg"), ("PNG", ".png"), ("GIF", ".gif")])
+            filetypes=[("All Files", "*.*"), ("JPEG", ".jpg"), ("PNG", ".png"), ("GIF", ".gif"), ("mp4", ".mp4")])
 
         if not self.current_image_path:
             return
         self.directory = os.path.dirname(self.current_image_path)
-        self.all_files = sorted(os.listdir(self.directory))  # Сортируем список файлов
+        self.all_files = sorted(os.listdir(self.directory))
         self.current_file = os.path.basename(self.current_image_path)
         self.index = self.all_files.index(self.current_file)
-
-        if self.current_image_path:
-            self.load_image()
+        self.load_image()
 
     def load_image(self):
-        image = Image.open(self.current_image_path)
+        if self.stop_video_flag == True:
+            self.stop_video()
 
-        ## Resize image for display
-        max_size = (2200, 1100)
-        image.thumbnail(max_size)
+        self.exctension = os.path.splitext(self.current_image_path)
+        if self.current_image_path and self.exctension[1] in [".jpg", ".png", ".gif"]:
 
-        ## Save a reference to the original image (for zooming/rotating)
-        self.original_image = image
+            image = Image.open(self.current_image_path)
 
-        ## Create a Tkinter-compatible image
-        self.tk_image = ImageTk.PhotoImage(image)
-        self.image_label.configure(image=self.tk_image)
+            max_size = (2200, 1100)
+            image.thumbnail(max_size)
+            self.original_image = image
 
-        self.zoom_level = 1
+            self.tk_image = ImageTk.PhotoImage(image)
+            self.image_label.configure(image=self.tk_image)
+            self.zoom_level = 1
+        else:
+            if self.image_label:
+                self.image_label.configure(image='')
+                self.load_video()
 
     def zoom_in(self):
-        if not self.current_image_path:  ## No image loaded
+        if not self.current_image_path:  
             return
-        self.zoom_level *= 1.1  ## Increase zoom level by 10%
+        self.zoom_level *= 1.1  
         self.zoom_or_rotate_image()
 
     def zoom_out(self):
-        if not self.current_image_path:  ## No image loaded
+        if not self.current_image_path:  
             return
-        if self.zoom_level < 0.1:  ## Limit outwards zoom
+        if self.zoom_level < 0.1:  
             return
-        self.zoom_level *= 0.9  ## Decrease zoom level by 10%
+        self.zoom_level *= 0.9  
         self.zoom_or_rotate_image()
 
     def rotate(self):
-        if not self.current_image_path:  ## No image loaded
+        if not self.current_image_path: 
             return
         self.original_image = self.original_image.rotate(-90)
         self.zoom_or_rotate_image()
 
     def zoom_or_rotate_image(self):
-        ## Zoom and rotate original image, convert to Tk image, and display
         new_image = self.original_image.resize((int(self.original_image.width * self.zoom_level),
                                                 int(self.original_image.height * self.zoom_level)))
         self.tk_image = ImageTk.PhotoImage(new_image)
@@ -106,7 +117,6 @@ class ImageViewer:
     def delete(self):
         if not self.current_image_path:
             return
-#        self.all_files = sorted(os.listdir(self.directory))  # Сортируем список файлов
         current_file = os.path.basename(self.current_image_path)
         try:
             os.remove(self.current_image_path)
@@ -128,7 +138,9 @@ class ImageViewer:
             messagebox.showerror("Ошибка", "Файл не найден в директории.")
 
     def next_image(self):
-#        index = self.all_files.index(self.current_file)
+        if self.stop_video_flag == True:
+            self.stop_video()
+
         if self.all_files:
             index = self.all_files.index(self.current_file) if self.current_file in self.all_files else -1
             if index + 1 < len(self.all_files):
@@ -141,12 +153,33 @@ class ImageViewer:
 
 
     def prev_image(self):
+        if self.stop_video_flag == True:
+            self.stop_video()
         index = self.all_files.index(self.current_file)
         if self.all_files:
             next_file = self.all_files[index - 1] if index >= 0 else self.all_files[-1]
             self.current_image_path = os.path.join(self.directory, next_file)
             self.current_file = os.path.basename(self.current_image_path)
             self.load_image()
+
+
+    def stop_video(self):
+        self.my_label.destroy()
+        self.stop_video_flag = False
+        return
+
+
+
+    def load_video(self) -> None:
+        self.stop_video_flag = True
+        self.my_label = tk.Label(self.root)
+#        butoms = tk.Button(self.my_label, text="Stop", command=self.stop_video, bg='red', fg='white')
+#        butoms.pack(side='bottom')
+        self.my_label.pack(side='top', fill='both', expand='yes', padx=10, pady=10)
+        player = tkvideo(self.current_image_path, self.my_label, loop = 0, size=(1024,768))
+        player.play()
+
+
 
 
 if __name__ == '__main__':
