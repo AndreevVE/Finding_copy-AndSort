@@ -1,3 +1,4 @@
+import shutil
 import tkinter as tk
 from tkinter import Label
 import time
@@ -25,7 +26,6 @@ class VideoPlayer:
                 print("Error: Cannot read from video source.")
                 return
 
-            # Frame dimensions (ensure they match the source)
             source_height, source_width, _ = frame.shape
 
             self.running = True
@@ -35,13 +35,11 @@ class VideoPlayer:
                 if not ret:
                     break
 
-                # Resize and convert frame for Tkinter
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_image = ImageTk.PhotoImage(
                     Image.fromarray(frame).resize((source_width, source_height))
                 )
 
-                # Update the label (ensure it's not destroyed)
                 if self.label.winfo_exists():
                     self.label.config(image=frame_image)
                     self.label.image = frame_image
@@ -69,6 +67,7 @@ class VideoPlayer:
 
 class ImageViewer:
     def __init__(self, root):
+        self.path_too = None
         self.player = None
         self.stop_video_flag = False
         self.original_image = None
@@ -108,6 +107,9 @@ class ImageViewer:
 
         self.delete_button = tk.Button(self.control_frame, text='Delete', command=self.delete)
         self.delete_button.pack(side='left')
+
+        self.file_transfer_button = tk.Button(self.control_frame, text='File Transfer', command=self.file_transfer)
+        self.file_transfer_button.pack(side='left')
 
         self.next_button = tk.Button(self.control_frame, text='>', command=self.next_image)
         self.next_button.pack(side='left')
@@ -151,12 +153,16 @@ class ImageViewer:
                 self.load_video()
 
     def zoom_in(self):
+        if self.stop_video_flag:
+            return
         if not self.current_image_path:  
             return
         self.zoom_level *= 1.1  
         self.zoom_or_rotate_image()
 
     def zoom_out(self):
+        if self.stop_video_flag:
+            return
         if not self.current_image_path:  
             return
         if self.zoom_level < 0.1:  
@@ -165,12 +171,16 @@ class ImageViewer:
         self.zoom_or_rotate_image()
 
     def rotate(self):
+        if self.stop_video_flag:
+            return
         if not self.current_image_path: 
             return
         self.original_image = self.original_image.rotate(-90)
         self.zoom_or_rotate_image()
 
     def zoom_or_rotate_image(self):
+        if self.stop_video_flag:
+            return
         new_image = self.original_image.resize((int(self.original_image.width * self.zoom_level),
                                                 int(self.original_image.height * self.zoom_level)))
         self.tk_image = ImageTk.PhotoImage(new_image)
@@ -179,6 +189,8 @@ class ImageViewer:
     def delete(self):
         if not self.current_image_path:
             return
+        if self.stop_video_flag:
+            self.stop_video()
         current_file = os.path.basename(self.current_image_path)
         try:
             os.remove(self.current_image_path)
@@ -198,6 +210,36 @@ class ImageViewer:
                 messagebox.showinfo("Удаление", "Файлы в директории закончились.")
         except ValueError:
             messagebox.showerror("Ошибка", "Файл не найден в директории.")
+
+
+    def file_transfer(self):
+        if not self.current_image_path:
+            return
+        if self.stop_video_flag:
+            self.stop_video()
+
+        current_file = os.path.basename(self.current_image_path)
+        self.path_too = filedialog.askdirectory()
+        try:
+            shutil.copy2(self.current_image_path, self.path_too)
+            os.remove(self.current_image_path)
+            self.all_files.remove(current_file)
+            if self.all_files:
+                index = self.all_files.index(current_file) if current_file in self.all_files else -1
+                if index + 1 < len(self.all_files):
+                    next_file = self.all_files[index + 1]
+                else:
+                    next_file = self.all_files[0]
+                self.current_image_path = os.path.join(self.directory, next_file)
+                self.current_file = os.path.basename(self.current_image_path)
+                self.load_image()
+            else:
+                self.current_image_path = ''
+                self.image_label.configure(image='')
+                messagebox.showinfo("Удаление", "Файлы в директории закончились.")
+        except ValueError:
+            messagebox.showerror("Ошибка", "Файл не найден в директории.")
+
 
     def next_image(self):
         if self.stop_video_flag:
