@@ -83,7 +83,7 @@ class ImageViewer:
         self.root.configure(background='black')
 
         self.image_label = tk.Label(self.root)
-        self.image_label.pack()
+#        self.image_label.pack()
 
         self.control_frame = tk.Frame(self.root)
         self.control_frame.pack()
@@ -134,7 +134,7 @@ class ImageViewer:
 
         self.exctension = os.path.splitext(self.current_image_path)
         if self.current_image_path and self.exctension[1] in [".jpg", ".png", ".gif"]:
-
+            self.image_label.pack(side='top', fill='both', expand=True, padx=10, pady=10)
             image = Image.open(self.current_image_path)
 
             max_size = (2200, 1100)
@@ -146,6 +146,7 @@ class ImageViewer:
             self.zoom_level = 1
         else:
             if self.image_label:
+                self.image_label.pack_forget()
                 self.image_label.configure(image='')
                 self.load_video()
 
