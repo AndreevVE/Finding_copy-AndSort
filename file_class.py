@@ -1,15 +1,76 @@
 import tkinter as tk
+from tkinter import Label
+import time
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
-from tkvideo import tkvideo
-from tkVideoPlayer import TkinterVideo
+import threading
+import cv2
 import os
+
+class VideoPlayer:
+    def __init__(self, root, video_path):
+        self.root = root
+        self.video_path = video_path
+        self.label = Label(root)
+        self.label.pack()
+        self.running = False  # Flag to track the video-playing state
+        self.thread = None
+
+    def load_video(self):
+        try:
+            cap = cv2.VideoCapture(self.video_path)
+            ret, frame = cap.read()
+            if not ret:
+                print("Error: Cannot read from video source.")
+                return
+
+            # Frame dimensions (ensure they match the source)
+            source_height, source_width, _ = frame.shape
+
+            self.running = True
+
+            while self.running:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                # Resize and convert frame for Tkinter
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame_image = ImageTk.PhotoImage(
+                    Image.fromarray(frame).resize((source_width, source_height))
+                )
+
+                # Update the label (ensure it's not destroyed)
+                if self.label.winfo_exists():
+                    self.label.config(image=frame_image)
+                    self.label.image = frame_image
+                else:
+                    print("Label no longer exists. Stopping video thread.")
+                    break
+
+        except Exception as e:
+            print(f"Error in video playback: {e}")
+
+        finally:
+            cap.release()
+            print("Video playback thread exited.")
+
+    def start_video(self):
+        if not self.running:
+            self.thread = threading.Thread(target=self.load_video, daemon=True)
+            self.thread.start()
+
+    def stop_video(self):
+        if self.thread:
+            self.thread.join(1)
+        self.running = False
 
 
 class ImageViewer:
     def __init__(self, root):
-        self.stop_video_flag = None
+        self.player = None
+        self.stop_video_flag = False
         self.original_image = None
         self.my_label = None
         self.all_files = None
@@ -68,7 +129,7 @@ class ImageViewer:
         self.load_image()
 
     def load_image(self):
-        if self.stop_video_flag == True:
+        if self.stop_video_flag:
             self.stop_video()
 
         self.exctension = os.path.splitext(self.current_image_path)
@@ -138,7 +199,7 @@ class ImageViewer:
             messagebox.showerror("Ошибка", "Файл не найден в директории.")
 
     def next_image(self):
-        if self.stop_video_flag == True:
+        if self.stop_video_flag:
             self.stop_video()
 
         if self.all_files:
@@ -153,7 +214,7 @@ class ImageViewer:
 
 
     def prev_image(self):
-        if self.stop_video_flag == True:
+        if self.stop_video_flag:
             self.stop_video()
         index = self.all_files.index(self.current_file)
         if self.all_files:
@@ -164,21 +225,20 @@ class ImageViewer:
 
 
     def stop_video(self):
+        self.player.stop_video()
         self.my_label.destroy()
         self.stop_video_flag = False
         return
 
 
-
     def load_video(self) -> None:
         self.stop_video_flag = True
         self.my_label = tk.Label(self.root)
-#        butoms = tk.Button(self.my_label, text="Stop", command=self.stop_video, bg='red', fg='white')
-#        butoms.pack(side='bottom')
-        self.my_label.pack(side='top', fill='both', expand='yes', padx=10, pady=10)
-        player = tkvideo(self.current_image_path, self.my_label, loop = 0, size=(1024,768))
-        player.play()
-
+        butoms = tk.Button(self.my_label, text="Stop", command=self.stop_video, bg='red', fg='white')
+        butoms.pack(side='bottom')
+        self.my_label.pack(side='top', fill='both', expand=True, padx=10, pady=10)
+        self.player = VideoPlayer(self.my_label, self.current_image_path)
+        self.player.start_video()
 
 
 
