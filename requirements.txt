@@ -1,3 +1,8 @@
+av==14.2.0
 ffmpeg-python==0.2.0
 future==1.0.0
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+numpy==2.2.3
+opencv-python==4.11.0.86
 pillow==11.1.0

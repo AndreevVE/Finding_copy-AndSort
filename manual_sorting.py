@@ -1,7 +1,6 @@
 import shutil
 import tkinter as tk
 from tkinter import Label
-import time
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
