@@ -190,6 +190,7 @@ class ImageViewer:
             return
         if self.stop_video_flag:
             self.stop_video()
+
         current_file = os.path.basename(self.current_image_path)
         try:
             os.remove(self.current_image_path)
@@ -202,7 +203,7 @@ class ImageViewer:
                     next_file = self.all_files[0]
                 self.current_image_path = os.path.join(self.directory, next_file)
                 self.current_file = os.path.basename(self.current_image_path)
-                self.load_image()
+                self.next_image()
             else:
                 self.current_image_path = ''
                 self.image_label.configure(image='')
