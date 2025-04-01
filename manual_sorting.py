@@ -4,10 +4,12 @@ from tkinter import Label
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import Image, ImageTk
+from pillow_heif import register_heif_opener
 import threading
 import cv2
 import os
 
+register_heif_opener()
 class VideoPlayer:
     def __init__(self, root, video_path):
         self.root = root
@@ -77,7 +79,7 @@ class ImageViewer:
         self.current_file = None
         self.root = root
         self.root.title('Image Viewer')
-        self.root.geometry('2400x1200')
+        self.root.geometry('1280x720')
         self.root.configure(background='black')
 
         self.image_label = tk.Label(self.root)
@@ -119,7 +121,8 @@ class ImageViewer:
 
     def open_image(self):
         self.current_image_path = filedialog.askopenfilename(defaultextension=".jpg",
-            filetypes=[("All Files", "*.*"), ("JPEG", ".jpg"), ("PNG", ".png"), ("GIF", ".gif"), ("mp4", ".mp4")])
+            filetypes=[("All Files", "*.*"), ("JPEG", ".jpg"), ("PNG", ".png"), ("GIF", ".gif"),
+                       ("HEIC", ".heic"), ("mp4", ".mp4")])
 
         if not self.current_image_path:
             return
@@ -134,11 +137,11 @@ class ImageViewer:
             self.stop_video()
 
         self.exctension = os.path.splitext(self.current_image_path)
-        if self.current_image_path and self.exctension[1] in [".jpg", ".png", ".gif"]:
+        if self.current_image_path and self.exctension[1] in [".jpg", ".png", ".gif", ".heic"]:
             self.image_label.pack(side='top', fill='both', expand=True, padx=10, pady=10)
             image = Image.open(self.current_image_path)
 
-            max_size = (2200, 1100)
+            max_size = (1270, 710)
             image.thumbnail(max_size)
             self.original_image = image
 
@@ -190,26 +193,35 @@ class ImageViewer:
             return
         if self.stop_video_flag:
             self.stop_video()
-
-        current_file = os.path.basename(self.current_image_path)
         try:
+        # Удаляем текущий файл с диска
             os.remove(self.current_image_path)
-            self.all_files.remove(current_file)
-            if self.all_files:
-                index = self.all_files.index(current_file) if current_file in self.all_files else -1
-                if index + 1 < len(self.all_files):
-                    next_file = self.all_files[index + 1]
-                else:
-                    next_file = self.all_files[0]
+
+        # Убираем файл из списка
+            self.all_files.remove(self.current_file)
+
+            if self.all_files:  # Если остались файлы
+            # Переход к следующему файлу
+                next_index = 0  # По умолчанию первый файл
+                if self.current_file in self.all_files:  # Если файл остался в списке (редкий случай)
+                    next_index = self.all_files.index(self.current_file) + 1
+                if next_index >= len(self.all_files):  # Если текущий был последним
+                    next_index = 0  # Переход на первый файл
+
+            # Обновляем текущие данные на следующий файл
+                next_file = self.all_files[next_index]
                 self.current_image_path = os.path.join(self.directory, next_file)
                 self.current_file = os.path.basename(self.current_image_path)
-                self.next_image()
+                self.next_image()  # Загружаем следующее изображение
             else:
+            # Если больше файлов нет
                 self.current_image_path = ''
                 self.image_label.configure(image='')
                 messagebox.showinfo("Удаление", "Файлы в директории закончились.")
         except ValueError:
-            messagebox.showerror("Ошибка", "Файл не найден в директории.")
+            messagebox.showerror("Ошибка", "Файл не найден в списке.")
+        except FileNotFoundError:
+            messagebox.showerror("Ошибка", "Файл не найден на диске.")
 
 
     def file_transfer(self):
